@@ -1,4 +1,5 @@
 import food.Food;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -20,23 +21,24 @@ class EdibleTests {
 
     public static Stream<Arguments> notEdibleFood() {
         return Stream.of(
-                Arguments.of(true, inspector, notFreshDate),
-                Arguments.of(false, inspector, freshDate),
-                Arguments.of(true, null, freshDate),
-                Arguments.of(false, null, notFreshDate),
-                Arguments.of(false, null, freshDate)
+                Arguments.of(true, inspector, notFreshDate, "Not fresh food"),
+                Arguments.of(false, inspector, freshDate, "Not approved for consumption"),
+                Arguments.of(true, null, freshDate, "No inspector"),
+                Arguments.of(false, null, notFreshDate, "Not approved for consumption, no inspector and not fresh food"),
+                Arguments.of(false, null, freshDate, "Not approved for consumption, no inspector")
         );
     }
 
-    @ParameterizedTest
+    @DisplayName("Not edible food")
+    @ParameterizedTest(name = "{3}")
     @MethodSource("notEdibleFood")
-    void not_edible_if_not_fresh(boolean approvedForConsumption, UUID inspectorId, LocalDate now) {
+    void not_edible_if_not_fresh(boolean approvedForConsumption, UUID inspectorId, LocalDate now, String doc) {
         var food = new Food(
                 expirationDate,
                 approvedForConsumption,
                 inspectorId);
 
-        assertThat(food.isEdible(() -> now)).isFalse();
+        assertThat(food.isEdible(() -> now)).as(doc).isFalse();
     }
 
     @Test
