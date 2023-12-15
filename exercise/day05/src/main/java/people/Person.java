@@ -8,8 +8,14 @@ public record Person(String firstName, String lastName, List<Pet> pets) {
         this(firstName, lastName, new ArrayList<>());
     }
 
+
+    public int youngestPetAge() {
+        return pets().stream().mapToInt(Pet::age).min().orElse(Integer.MAX_VALUE);
+    }
+
     public Person addPet(PetType petType, String name, int age) {
         pets.add(new Pet(petType, name, age));
         return this;
     }
+
 }

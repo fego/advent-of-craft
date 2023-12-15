@@ -1,23 +1,21 @@
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import people.Person;
-import people.Pet;
 import people.PetType;
+import people.Population;
 
 import java.util.Arrays;
 import java.util.List;
 
-import static java.lang.String.format;
 import static java.lang.System.lineSeparator;
-import static java.util.Comparator.comparingInt;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class PopulationTests {
-    private static List<Person> population;
+    private static Population population;
 
     @BeforeAll
     static void setup() {
-        population = Arrays.asList(
+        List<Person> people = Arrays.asList(
                 new Person("Peter", "Griffin")
                         .addPet(PetType.CAT, "Tabby", 2),
                 new Person("Stewie", "Griffin")
@@ -36,14 +34,15 @@ class PopulationTests {
                         .addPet(PetType.HAMSTER, "Wuzzy", 2),
                 new Person("Glenn", "Quagmire")
         );
+        population = new Population(people);
     }
 
     @Test
     void peopleWithTheirPets() {
-        final var response = formatPopulation();
+        final var response = population.format();
 
         assertThat(response)
-                .hasToString("Peter Griffin who owns : Tabby " + lineSeparator() +
+                .isEqualTo("Peter Griffin who owns : Tabby " + lineSeparator() +
                         "Stewie Griffin who owns : Dolly Brian " + lineSeparator() +
                         "Joe Swanson who owns : Spike " + lineSeparator() +
                         "Lois Griffin who owns : Serpy " + lineSeparator() +
@@ -53,42 +52,12 @@ class PopulationTests {
                         "Glenn Quagmire");
     }
 
-    private static StringBuilder formatPopulation() {
-        final var response = new StringBuilder();
-
-        for (var person : population) {
-            response.append(format("%s %s", person.firstName(), person.lastName()));
-
-            if (!person.pets().isEmpty()) {
-                response.append(" who owns : ");
-            }
-
-            for (var pet : person.pets()) {
-                response.append(pet.name()).append(" ");
-            }
-
-            if (!population.getLast().equals(person)) {
-                response.append(lineSeparator());
-            }
-        }
-        return response;
-    }
-
     @Test
     void whoOwnsTheYoungestPet() {
-        var filtered = population.stream()
-                .min(comparingInt(PopulationTests::youngestPetAgeOfThePerson))
-                .orElse(null);
+        var filtered = population.youngest();
 
         assert filtered != null;
         assertThat(filtered.firstName()).isEqualTo("Lois");
     }
 
-    private static int youngestPetAgeOfThePerson(Person person) {
-        return person.pets()
-                .stream()
-                .mapToInt(Pet::age)
-                .min()
-                .orElse(Integer.MAX_VALUE);
-    }
 }
