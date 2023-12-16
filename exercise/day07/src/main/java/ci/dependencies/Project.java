@@ -1,12 +1,12 @@
 package ci.dependencies;
 
 public class Project {
-    private final boolean buildsSuccessfully;
+    private final DeploymentStatus deploymentStatus;
     private final TestStatus testStatus;
 
-    private Project(boolean buildsSuccessfully, TestStatus testStatus) {
-        this.buildsSuccessfully = buildsSuccessfully;
+    private Project(TestStatus testStatus, DeploymentStatus deploymentStatus) {
         this.testStatus = testStatus;
+        this.deploymentStatus = deploymentStatus;
     }
 
     public static ProjectBuilder builder() {
@@ -21,26 +21,27 @@ public class Project {
         return testStatus == TestStatus.PASSING_TESTS ? "success" : "failure";
     }
 
-    public String deploy() {
-        return buildsSuccessfully ? "success" : "failure";
+    public boolean deployedSuccessfully() {
+        return deploymentStatus == DeploymentStatus.SUCCESS;
     }
 
     public static class ProjectBuilder {
-        private boolean buildsSuccessfully;
         private TestStatus testStatus;
+
+        private DeploymentStatus deploymentStatus;
 
         public ProjectBuilder setTestStatus(TestStatus testStatus) {
             this.testStatus = testStatus;
             return this;
         }
 
-        public ProjectBuilder setDeploysSuccessfully(boolean buildsSuccessfully) {
-            this.buildsSuccessfully = buildsSuccessfully;
+        public ProjectBuilder setDeploymentStatus(DeploymentStatus deploymentStatus) {
+            this.deploymentStatus = deploymentStatus;
             return this;
         }
 
         public Project build() {
-            return new Project(buildsSuccessfully, testStatus);
+            return new Project(testStatus, deploymentStatus);
         }
     }
 }

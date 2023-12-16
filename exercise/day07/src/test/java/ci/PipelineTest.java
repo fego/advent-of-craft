@@ -1,14 +1,13 @@
 package ci;
 
-import ci.dependencies.Config;
-import ci.dependencies.Emailer;
-import ci.dependencies.Project;
+import ci.dependencies.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
 import static ci.dependencies.TestStatus.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -26,94 +25,76 @@ class PipelineTest {
 
     @Test
     void project_with_tests_that_deploys_successfully_with_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(true);
-
-        var project = Project.builder()
-                .setTestStatus(PASSING_TESTS)
-                .setDeploysSuccessfully(true)
-                .build();
-
+        var project = buildProject(PASSING_TESTS, DeploymentStatus.SUCCESS);
+        // when
         pipeline.run(project);
-
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: Tests passed",
                 "INFO: Deployment successful",
-                "INFO: Sending email"
-        ), log.getLoggedLines());
+                "INFO: Sending email");
 
         verify(emailer).send("Deployment completed successfully");
     }
 
     @Test
     void project_with_tests_that_deploys_successfully_without_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(false);
-
-        Project project = Project.builder()
-                .setTestStatus(PASSING_TESTS)
-                .setDeploysSuccessfully(true)
-                .build();
-
+        Project project = buildProject(PASSING_TESTS, DeploymentStatus.SUCCESS);
+        // when
         pipeline.run(project);
-
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: Tests passed",
                 "INFO: Deployment successful",
-                "INFO: Email disabled"
-        ), log.getLoggedLines());
-
-        verify(emailer, never()).send(any());
+                "INFO: Email disabled");
     }
 
     @Test
     void project_without_tests_that_deploys_successfully_with_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(true);
-
-        Project project = Project.builder()
-                .setTestStatus(NO_TESTS)
-                .setDeploysSuccessfully(true)
-                .build();
-
+        Project project = buildProject(NO_TESTS, DeploymentStatus.SUCCESS);
+        // when
         pipeline.run(project);
-
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: No tests",
                 "INFO: Deployment successful",
-                "INFO: Sending email"
-        ), log.getLoggedLines());
+                "INFO: Sending email");
 
         verify(emailer).send("Deployment completed successfully");
     }
 
     @Test
     void project_without_tests_that_deploys_successfully_without_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(false);
-
-        Project project = Project.builder()
-                .setTestStatus(NO_TESTS)
-                .setDeploysSuccessfully(true)
-                .build();
-
+        Project project = buildProject(NO_TESTS, DeploymentStatus.SUCCESS);
+        // when
         pipeline.run(project);
-
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: No tests",
                 "INFO: Deployment successful",
-                "INFO: Email disabled"
-        ), log.getLoggedLines());
+                "INFO: Email disabled");
 
         verify(emailer, never()).send(any());
     }
 
     @Test
     void project_with_tests_that_fail_with_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(true);
+        Project project = buildProject(FAILING_TESTS, DeploymentStatus.NOT_RUN);
 
-        Project project = Project.builder()
-                .setTestStatus(FAILING_TESTS)
-                .build();
-
+        // when
         pipeline.run(project);
 
+        // then
         assertEquals(Arrays.asList(
                 "ERROR: Tests failed",
                 "INFO: Sending email"
@@ -124,14 +105,15 @@ class PipelineTest {
 
     @Test
     void project_with_tests_that_fail_without_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(false);
 
-        Project project = Project.builder()
-                .setTestStatus(FAILING_TESTS)
-                .build();
+        Project project = buildProject(FAILING_TESTS, DeploymentStatus.NOT_RUN);
 
+        // when
         pipeline.run(project);
 
+        // then
         assertEquals(Arrays.asList(
                 "ERROR: Tests failed",
                 "INFO: Email disabled"
@@ -142,81 +124,84 @@ class PipelineTest {
 
     @Test
     void project_with_tests_and_failing_build_with_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(true);
 
-        Project project = Project.builder()
-                .setTestStatus(PASSING_TESTS)
-                .setDeploysSuccessfully(false)
-                .build();
+        Project project = buildProject(PASSING_TESTS, DeploymentStatus.FAILURE);
 
+        // when
         pipeline.run(project);
 
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: Tests passed",
                 "ERROR: Deployment failed",
-                "INFO: Sending email"
-        ), log.getLoggedLines());
+                "INFO: Sending email");
 
         verify(emailer).send("Deployment failed");
     }
 
     @Test
     void project_with_tests_and_failing_build_without_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(false);
 
-        Project project = Project.builder()
-                .setTestStatus(PASSING_TESTS)
-                .setDeploysSuccessfully(false)
-                .build();
+        Project project = buildProject(PASSING_TESTS, DeploymentStatus.FAILURE);
 
+        // when
         pipeline.run(project);
 
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: Tests passed",
                 "ERROR: Deployment failed",
-                "INFO: Email disabled"
-        ), log.getLoggedLines());
+                "INFO: Email disabled");
 
         verify(emailer, never()).send(any());
     }
 
     @Test
     void project_without_tests_and_failing_build_with_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(true);
 
-        Project project = Project.builder()
-                .setTestStatus(NO_TESTS)
-                .setDeploysSuccessfully(false)
-                .build();
+        Project project = buildProject(NO_TESTS, DeploymentStatus.FAILURE);
 
+        // when
         pipeline.run(project);
 
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: No tests",
                 "ERROR: Deployment failed",
-                "INFO: Sending email"
-        ), log.getLoggedLines());
+                "INFO: Sending email");
 
         verify(emailer).send("Deployment failed");
     }
 
     @Test
     void project_without_tests_and_failing_build_without_email_notification() {
+        // given
         when(config.sendEmailSummary()).thenReturn(false);
 
-        Project project = Project.builder()
-                .setTestStatus(NO_TESTS)
-                .setDeploysSuccessfully(false)
-                .build();
+        Project project = buildProject(NO_TESTS, DeploymentStatus.FAILURE);
 
+        // when
         pipeline.run(project);
 
-        assertEquals(Arrays.asList(
+        // then
+        assertThat(log.getLoggedLines()).containsExactly(
                 "INFO: No tests",
                 "ERROR: Deployment failed",
-                "INFO: Email disabled"
-        ), log.getLoggedLines());
+                "INFO: Email disabled");
 
         verify(emailer, never()).send(any());
+    }
+
+    private static Project buildProject(TestStatus testStatus, DeploymentStatus deploymentStatus) {
+        return Project.builder()
+                .setTestStatus(testStatus)
+                .setDeploymentStatus(deploymentStatus)
+                .build();
     }
 }
