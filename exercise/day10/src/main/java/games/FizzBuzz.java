@@ -1,5 +1,9 @@
 package games;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
+
 public class FizzBuzz {
     public static final int MIN = 0;
     public static final int MAX = 100;
@@ -7,34 +11,39 @@ public class FizzBuzz {
     public static final int BUZZ = 5;
     public static final int FIZZBUZZ = 15;
 
+    private static final List<FizzBuzzRule> rules = List.of(
+            new FizzBuzzRule(integer -> integer % FIZZBUZZ == 0, "FizzBuzz"),
+            new FizzBuzzRule(integer -> integer % FIZZ == 0, "Fizz"),
+            new FizzBuzzRule(integer -> integer % BUZZ == 0, "Buzz")
+    );
+
     private FizzBuzz() {
     }
 
     public static String convert(Integer input) throws OutOfRangeException {
-        if (isOutOfRange(input)) {
-            throw new OutOfRangeException();
-        }
-        return convertSafely(input);
+        return new Range(MIN, MAX).mapInRange(input)
+                .map(FizzBuzz::convertSafely)
+                .orElseThrow(OutOfRangeException::new);
     }
 
     private static String convertSafely(Integer input) {
-        if (is(FIZZBUZZ, input)) {
-            return "FizzBuzz";
-        }
-        if (is(FIZZ, input)) {
-            return "Fizz";
-        }
-        if (is(BUZZ, input)) {
-            return "Buzz";
-        }
-        return input.toString();
+        return rules.stream()
+                .filter(fizzBuzzRule -> fizzBuzzRule.match(input))
+                .findFirst()
+                .map(fizzBuzzRule -> fizzBuzzRule.value)
+                .orElse(input.toString());
     }
 
-    private static boolean is(Integer divisor, Integer input) {
-        return input % divisor == 0;
+    record FizzBuzzRule(Function<Integer, Boolean> rule, String value) {
+        boolean match(Integer value) {
+            return this.rule.apply(value);
+        }
     }
 
-    private static boolean isOutOfRange(Integer input) {
-        return input <= MIN || input > MAX;
+    record Range(int min, int max) {
+        Optional<Integer> mapInRange(Integer value) {
+            return Optional.of(value)
+                    .filter(integer -> integer <= max && integer > min);
+        }
     }
 }
