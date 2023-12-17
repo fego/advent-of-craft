@@ -15,10 +15,13 @@ class ClientTests {
     }});
 
     @Test
+    void client_to_amount() {
+        assertThat(client.getTotalAmount()).isEqualTo(130.97);
+    }
+
+    @Test
     void client_should_return_statement() {
         String statement = client.toStatement();
-
-        assertThat(client.getTotalAmount()).isEqualTo(130.97);
         assertThat(statement).isEqualTo(
                 "Tenet Deluxe Edition for 45.99€" + lineSeparator() +
                         "Inception for 30.5€" + lineSeparator() +
