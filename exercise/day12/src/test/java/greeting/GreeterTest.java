@@ -1,42 +1,21 @@
 package greeting;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GreeterTest {
-    @Test
-    void saysHello() {
-        var greeter = new Greeter();
-
-        assertThat(greeter.greet())
-                .isEqualTo("Hello.");
+    @ParameterizedTest
+    @CsvSource(delimiterString = "=>", textBlock = """
+            NONE     => Hello.
+            FORMAL   => Good evening, sir.
+            CASUAL   => Sup bro?
+            INTIMATE => Hello Darling!
+             """)
+    void sayFormally(Formality formality, String expectedGreet) {
+        var greeter = new Greeter(formality);
+        assertThat(greeter.greet()).isEqualTo(expectedGreet);
     }
 
-    @Test
-    void saysHelloFormally() {
-        var greeter = new Greeter();
-        greeter.setFormality("formal");
-
-        assertThat(greeter.greet())
-                .isEqualTo("Good evening, sir.");
-    }
-
-    @Test
-    void saysHelloCasually() {
-        var greeter = new Greeter();
-        greeter.setFormality("casual");
-
-        assertThat(greeter.greet())
-                .isEqualTo("Sup bro?");
-    }
-
-    @Test
-    void saysHelloIntimately() {
-        var greeter = new Greeter();
-        greeter.setFormality("intimate");
-
-        assertThat(greeter.greet())
-                .isEqualTo("Hello Darling!");
-    }
 }

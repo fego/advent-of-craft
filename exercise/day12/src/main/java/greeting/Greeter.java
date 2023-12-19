@@ -1,25 +1,25 @@
 package greeting;
 
+import java.util.List;
+
 public class Greeter {
-    String formality;
+    Formality formality;
+    private static final List<GreeterStrategy> greeters = List.of(
+            new IntimateGreeter(),
+            new CasualGreeter(),
+            new FormalGreeter(),
+            new DefaultGreeter());
 
-    public String greet() {
-        if (this.formality == null) {
-            return "Hello.";
-        }
-
-        if (this.formality.equals("formal")) {
-            return "Good evening, sir.";
-        } else if (this.formality.equals("casual")) {
-            return "Sup bro?";
-        } else if (this.formality.equals("intimate")) {
-            return "Hello Darling!";
-        } else {
-            return "Hello.";
-        }
-    }
-
-    public void setFormality(String formality) {
+    public Greeter(Formality formality) {
         this.formality = formality;
     }
+
+    public String greet() {
+        return greeters.stream()
+                .filter(greeterStrategy -> greeterStrategy.canGreet(formality))
+                .findFirst()
+                .map(GreeterStrategy::greet)
+                .orElseThrow(() -> new RuntimeException("Greeter Strategy is Missing"));
+    }
+
 }
