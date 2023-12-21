@@ -20,19 +20,19 @@ public class FizzBuzz {
         mapping.put(i -> is(BUZZ, i), "Buzz");
     }
 
+    public static Result<String> convertWithResult(Integer input) {
+        if (isOutOfRange(input)) {
+            return Result.error(new OutOfRangeException());
+        }
+        return Result.success(convertSafely(input));
+    }
+
     private static boolean is(Integer divisor, Integer input) {
         return input % divisor == 0;
     }
 
     private static boolean isOutOfRange(Integer input) {
         return input <= MIN || input > MAX;
-    }
-
-    public static String convert(Integer input) throws OutOfRangeException {
-        if (isOutOfRange(input)) {
-            throw new OutOfRangeException();
-        }
-        return convertSafely(input);
     }
 
     private static String convertSafely(Integer input) {
