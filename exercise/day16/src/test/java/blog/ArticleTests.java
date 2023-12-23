@@ -15,8 +15,18 @@ class ArticleTests {
     private Article article;
 
     @Test
+    void should_not_mutate_article() throws CommentAlreadyExistException {
+        Article article = new ArticleBuilder().build();
+        Article articleWithComment = article.addComment("any text", "author");
+        assertThat(article.getComments()).isEmpty();
+        assertThat(articleWithComment.getComments()).singleElement();
+    }
+
+    @Test
     void should_add_comment_in_an_article() throws CommentAlreadyExistException {
-        when(article -> article.addComment(COMMENT_TEXT, AUTHOR));
+        article = new ArticleBuilder()
+                .build()
+                .addComment(COMMENT_TEXT, AUTHOR);
         then(article -> {
             assertThat(article.getComments()).hasSize(1);
             assertComment(article.getComments().get(0), COMMENT_TEXT, AUTHOR);
@@ -28,7 +38,7 @@ class ArticleTests {
         final var newComment = create(String.class);
         final var newAuthor = create(String.class);
 
-        when(ArticleBuilder::commented, article -> article.addComment(newComment, newAuthor));
+        article = new ArticleBuilder().commented().build().addComment(newComment, newAuthor);
         then(article -> {
             assertThat(article.getComments()).hasSize(2);
             assertComment(article.getComments().getLast(), newComment, newAuthor);

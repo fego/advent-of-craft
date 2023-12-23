@@ -27,7 +27,7 @@ public class ArticleBuilder {
                 "consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore"
         );
         for (Map.Entry<String, String> comment : comments.entrySet()) {
-            article.addComment(comment.getKey(), comment.getValue());
+            article = article.addComment(comment.getKey(), comment.getValue());
         }
         return article;
     }
